@@ -518,6 +518,8 @@ public final class YetiAnalyzer extends YetiType {
                                            "Cannot use #1 as a function", ex);
             }
             YType argt = argCode.type.deref();
+			ex.printStackTrace();
+			new Exception().printStackTrace();
             String s = "Cannot apply #1 function";
             if (where != arg && where instanceof BinOp) {
                 BinOp op = (BinOp) where;

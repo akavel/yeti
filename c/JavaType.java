@@ -315,6 +315,25 @@ class JavaType implements Cloneable {
             }
             return descr = result.toString();
         }
+		
+		private static final Map BUILTINS = new HashMap();
+		static {
+			BUILTINS.put("int hashCode()", new Object());
+			BUILTINS.put("void notify()", new Object());
+			BUILTINS.put("void notifyAll()", new Object());
+			BUILTINS.put("~java.lang.Class getClass()", new Object());
+			BUILTINS.put("~java.lang.Object clone()", new Object());
+			BUILTINS.put("~java.lang.String toString()", new Object());
+			BUILTINS.put("void wait(long)", new Object());
+			BUILTINS.put("void wait(long, int)", new Object());
+			BUILTINS.put("boolean equals(~java.lang.Object)", new Object());
+			BUILTINS.put("void wait()", new Object());
+			BUILTINS.put("void finalize()", new Object());
+		}
+		
+		boolean isBuiltin() {
+			return BUILTINS.containsKey(this.toString());
+		}
     }
 
     private static final JavaType[] EMPTY_JTARR = {};
@@ -641,6 +660,57 @@ class JavaType implements Cloneable {
             return description == "Z" || description == "Ljava/lang/Boolean;"
                     ? 0 : -1;
         case YetiType.FUN:
+			System.out.println("MCDBG " + description + " FROM " + from);
+			List abstracts = new ArrayList();
+			for (int i=0; i<methods.length; i++) //FIXME: verify we're handling "final" correctly
+				if (abstracts.size() <= 1 && !methods[i].isBuiltin() &&
+					((methods[i].access & (Opcodes.ACC_ABSTRACT | Opcodes.ACC_FINAL | Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC)) ==
+						(Opcodes.ACC_ABSTRACT | Opcodes.ACC_PUBLIC)))
+					abstracts.add(methods[i]);
+			if (abstracts.size()==1) {
+				System.out.println("MCDBG one public abstract...");
+				//new Exception().printStackTrace();
+				//TODO: check all args for assignability Java->Yeti
+				//TODO: check retval for assignability Yeti->Java
+				//FIXME: add some protection to be sure we won't get into infinite recursion
+				//FIXME: allow retval to also be any value normally convertible Yeti->Java
+				Method m = (Method) abstracts.get(0);
+				YType margs[] = m.arguments;
+				YType yarg = from;
+				boolean ok = true;
+				for (int i=0; i<margs.length; i++) {
+					if (yarg.type != YetiType.FUN) {
+						System.out.println("MCDBG non-FUN yarg " + yarg);
+						ok = false;
+						break;
+					}
+					YType funarg[] = from.param;
+					if (funarg == null || funarg == YetiType.NO_PARAM || funarg.length!=2) {
+						System.out.println("MCDBG bad funarg " + funarg + " at i=" + i);
+						ok = false;
+						break;
+					}
+					if (isAssignable(funarg[0], margs[i], true) < 0) { //FIXME: true here, or false?
+						System.out.println("MCDBG not assignable " + funarg[0] + " := " + margs[i]);
+						ok = false;
+						break;
+					}
+					yarg = funarg[1];
+				}
+				if (ok) {
+					ok = isAssignable(m.returnType, yarg, true) < 0; //FIXME: true here, or false?
+				}
+				if (ok) {
+					System.out.println("MCDBG Yeti lambda seems assignable to Java SUM");
+					return 9; //FIXME: what value here?
+				} else {
+					System.out.println("MCDBG cannot assign Yeti lambda as Java SUM");
+				}
+			}
+			for (int i=0; i<methods.length; i++)
+				System.out.println("MCDBG  " + methods[i] + (methods[i].isBuiltin() ? "*" : "") + " " + methods[i].access);
+			//+ " WITH " + java.util.Arrays.toString(methods));
+			//TODO: check if we're "one method interface/abstract class"
             return description == "Lyeti/lang/Fun;" ? 0 : -1;
         case YetiType.MAP: {
             switch (from.param[2].deref().type) {
