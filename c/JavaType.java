@@ -933,6 +933,53 @@ class JavaType implements Cloneable {
             }
         }
         if (res != -1) {
+			for (int i=0; i<args.length; i++) {
+				if (args[i].type.type == YetiType.FUN && m.arguments[i].description != "Lyeti/lang/Fun;") {
+					//TODO: first, we must try to do the same what happens when "class" token is found (create class?)
+					//TODO: the created class must inherit from specified interface/class m.arguments[i]
+					//TODO: in the created class, we must somehow inject the Code from args[i] in appropriate method
+					//TODO: in injected Code, we must somehow bind lambda arguments to method arguments / call the lambda w/them -- see '== ""', apply(), I believe
+					//TODO: then we must substitute args[i] with NewExpr(...) appropriately
+					
+//TODO: verify that the extended class/interface has a constructor with no arguments
+Node c = new XNode("class",
+	new Node[] {
+		new Sym("MCDBG$GENERATED$ID"), //TODO: generated ID
+		new XNode("argument-list", new Node[0]),
+		new XNode("extends", new Node[] {
+			new Sym(<name/of/extended/class>),
+			new XNode("arguments", null) }),
+		new XNode("method", new Node[] {
+			new Sym(<return/type>),
+			new Sym(<method-name>),
+			new XNode("argument-list", new Node[] {
+				new Sym(<arg/type>),
+				new Sym(<arg-name>),
+				... }),
+			new Seq( .../* body of method */...) }), //TODO: read more about Seq: what's EVAL, seqKind? how analyze() handles it?
+	})
+//the above would be result of Parser.parse(); then, analyze(c, scope, 0); would be called; or,
+//more like analSeq(...) somehow through analyze(...)
+            } else if (nodes[i].kind == "class") {
+                Scope scope_[] = { scope };
+                addSeq(last, new SeqExpr(
+                    MethodDesc.defineClass((XNode) nodes[i],
+                        seq.seqKind instanceof TopLevel &&
+                            ((TopLevel) seq.seqKind).isModule, scope_, depth)));
+                scope = scope_[0];
+            } /*else { //MC: including "new", I believe
+                Code code = analyze(nodes[i], scope, depth);
+                expectUnit(code, nodes[i], scope, "Unit type expected here",
+                    seq.seqKind != "{}" ? null :
+                    "\n    (use , instead of ; to separate structure fields)");
+                addSeq(last, new SeqExpr(code));
+            }*/
+        Node expr = nodes[nodes.length - 1]; //MC: here we'd get "new", I believe
+        Code code = analyze(expr, scope, depth);
+		//return wrapSeq(code, last);
+
+				}
+			}
             return ma[res].dup(ma, res, objType);
         }
         StringBuffer err = new StringBuffer("No suitable method ")
