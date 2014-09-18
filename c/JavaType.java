@@ -600,7 +600,7 @@ class JavaType implements Cloneable {
 	static final int SAM_BITS = Opcodes.ACC_ABSTRACT | Opcodes.ACC_PUBLIC;
 	
 	// single abstract method, if available
-	Method getSAM() {
+    Method getSAM() {
 		//TODO: also we must have 0-argument constructor -- verify this
 		Method sam = null;
 		for (int i=0; i<methods.length; i++) { //FIXME: verify we're handling "final" correctly
@@ -677,7 +677,10 @@ class JavaType implements Cloneable {
             return description == "Z" || description == "Ljava/lang/Boolean;"
                     ? 0 : -1;
         case YetiType.FUN:
+            if (description == "Lyeti/lang/Fun;")
+                return 0;
 			System.out.println("MCDBG " + description + " FROM " + from);
+            resolve();
 			Method sam = getSAM();
 			if (sam != null) {
 				System.out.println("MCDBG one public abstract...");
@@ -722,7 +725,7 @@ class JavaType implements Cloneable {
 				System.out.println("MCDBG  " + methods[i] + (methods[i].isBuiltin() ? "*" : "") + " " + methods[i].access);
 			//+ " WITH " + java.util.Arrays.toString(methods));
 			//TODO: check if we're "one method interface/abstract class"
-            return description == "Lyeti/lang/Fun;" ? 0 : -1;
+            return -1;
         case YetiType.MAP: {
             switch (from.param[2].deref().type) {
             case YetiType.MAP_MARKER:
@@ -944,82 +947,6 @@ class JavaType implements Cloneable {
             }
         }
         if (res != -1) {
-			Method m = ma[res];
-			for (int i=0; i<args.length; i++) {
-				if (args[i].type.type == YetiType.FUN && m.arguments[i].type == YetiType.JAVA && m.arguments[i].javaType.description != "Lyeti/lang/Fun;") {
-					JavaType jt = m.arguments[i].javaType;
-					Method sam = jt.getSAM();
-					YetiParser.Node[] argnodes = new YetiParser.Node[sam.arguments.length*2];
-					for (int j=0; j<sam.arguments.length; j++) {
-						argnodes[j] = new YetiParser.Sym(sam.arguments[j].javaType.dottedName());
-						argnodes[j+1] = new YetiParser.Sym("arg" + j);
-					}
-					//TODO: first, we must try to do the same what happens when "class" token is found (create class?)
-					//TODO: the created class must inherit from specified interface/class m.arguments[i]
-					//TODO: in the created class, we must somehow inject the Code from args[i] in appropriate method
-					//TODO: in injected Code, we must somehow bind lambda arguments to method arguments / call the lambda w/them -- see '== ""', apply(), I believe
-					YetiParser.Node call = new YetiParser.Seq(null, args[i]);
-					for (int j=0; j<sam.arguments.length; j++) {
-						YetiParser.BinOp op = new YetiParser.BinOp("", 2, true);
-						op.left = call;
-						op.right = new YetiParser.Sym("arg" + j);
-						//TODO: op.parent = ???
-						call = op;
-					}
-					if (sam.arguments.length == 0) {
-						//FIXME: verify if this is ok
-						YetiParser.BinOp op = new YetiParser.BinOp("", 2, true);
-						op.left = call;
-						op.right = new YetiParser.XNode("()");
-						call = op;
-					}
-					//TODO: then we must substitute args[i] with NewExpr(...) appropriately
-					
-YetiParser.Node c = new YetiParser.XNode("class", new YetiParser.Node[] {
-	new YetiParser.Sym("MCDBG$GENERATED$ID"), //TODO: generated ID
-	new YetiParser.XNode("argument-list", new YetiParser.Node[0]),
-	new YetiParser.XNode("extends", new YetiParser.Node[] {
-		new YetiParser.Sym(jt.dottedName()),
-//		new YetiParser.XNode("arguments", null) }),
-		new YetiParser.XNode("arguments") }),
-	new YetiParser.XNode("method", new YetiParser.Node[] {
-//		new Sym(<return/type>),
-		new YetiParser.Sym(sam.returnType.javaType.dottedName()),
-//		new Sym(<method-name>),
-		new YetiParser.Sym(sam.name),
-//		new XNode("argument-list", new Node[] {
-//			new Sym(<arg/type>),
-//			new Sym(<arg-name>),
-//			... }),
-		new YetiParser.XNode("argument-list", argnodes),
-//		new Seq( .../* body of method */...) }), //TODO: read more about Seq: what's EVAL, seqKind? how analyze() handles it?
-		new YetiParser.Seq(new YetiParser.Node[]{call}, null) }),
-});
-args[i] = YetiAnalyzer.analyze(c, new Scope(null, null, null), 99); //FIXME: is this ok?
-
-					
-////the above would be result of Parser.parse(); then, analyze(c, scope, 0); would be called; or,
-////more like analSeq(...) somehow through analyze(...)
-//            } else if (nodes[i].kind == "class") {
-//                Scope scope_[] = { scope };
-//                addSeq(last, new SeqExpr(
-//                    MethodDesc.defineClass((XNode) nodes[i],
-//                        seq.seqKind instanceof TopLevel &&
-//                            ((TopLevel) seq.seqKind).isModule, scope_, depth)));
-//                scope = scope_[0];
-//            } /*else { //MC: including "new", I believe
-//                Code code = analyze(nodes[i], scope, depth);
-//                expectUnit(code, nodes[i], scope, "Unit type expected here",
-//                    seq.seqKind != "{}" ? null :
-//                    "\n    (use , instead of ; to separate structure fields)");
-//                addSeq(last, new SeqExpr(code));
-//            }*/
-//        Node expr = nodes[nodes.length - 1]; //MC: here we'd get "new", I believe
-//        Code code = analyze(expr, scope, depth);
-//		//return wrapSeq(code, last);
-
-				}
-			}
             return ma[res].dup(ma, res, objType);
         }
         StringBuffer err = new StringBuffer("No suitable method ")

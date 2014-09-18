@@ -422,6 +422,93 @@ public final class YetiAnalyzer extends YetiType {
         return res;
     }
 
+    static JavaType.Method wrapSamArgs(JavaType.Method m, Code[] args, Scope scope) {
+        //TODO: maybe some day this could actually be done on every assignment etc, not only for method calls
+        for (int i=0; i<args.length; i++) {
+            if (args[i].type.type == YetiType.FUN && m.arguments[i].type == YetiType.JAVA && m.arguments[i].javaType.description != "Lyeti/lang/Fun;") {
+                JavaType jt = m.arguments[i].javaType;
+                JavaType.Method sam = jt.getSAM();
+                YetiParser.Node[] argnodes = new YetiParser.Node[sam.arguments.length*2];
+                for (int j=0; j<sam.arguments.length; j++) {
+                    argnodes[2*j] = new YetiParser.Sym(sam.arguments[j].javaType.str().replace("~", "").replace(".", "/"));
+                    argnodes[2*j+1] = new YetiParser.Sym(("arg" + j).intern());
+                }
+                //TODO: first, we must try to do the same what happens when "class" token is found (create class?)
+                //TODO: the created class must inherit from specified interface/class m.arguments[i]
+                //TODO: in the created class, we must somehow inject the Code from args[i] in appropriate method
+                //TODO: in injected Code, we must somehow bind lambda arguments to method arguments / call the lambda w/them -- see '== ""', apply(), I believe
+                YetiParser.Node call = new YetiParser.Seq(new YetiParser.Node[] {new YetiParser.Seq(null, args[i])}, null);
+                for (int j=0; j<sam.arguments.length; j++) {
+                    YetiParser.BinOp op = new YetiParser.BinOp("", 2, true);
+                    op.left = call;
+                    op.right = new YetiParser.Sym(("arg" + j).intern());
+                    //TODO: op.parent = ???
+                    call = op.pos(901, j+1);
+                }
+                if (sam.arguments.length == 0) {
+                    //FIXME: verify if this is ok
+                    YetiParser.BinOp op = new YetiParser.BinOp("", 2, true);
+                    op.left = call;
+                    op.right = new YetiParser.XNode("()");
+                    call = op;
+                }
+                //TODO: then we must substitute args[i] with NewExpr(...) appropriately
+                
+YetiParser.Node c = new YetiParser.XNode("class", new YetiParser.Node[] {
+new YetiParser.Sym("MCDBG$GENERATED$ID"), //TODO: generated ID
+new YetiParser.XNode("argument-list", new YetiParser.Node[0]),
+new YetiParser.XNode("extends", new YetiParser.Node[] {
+    new YetiParser.Sym(jt.str().replace("~", "").replace(".", "/")),
+//        new YetiParser.XNode("arguments", null) }),
+    new YetiParser.XNode("arguments") }),
+new YetiParser.XNode("method", new YetiParser.Node[] {
+//        new Sym(<return/type>),
+    new YetiParser.Sym(sam.returnType.javaType.str().replace("~", "").replace(".", "/")),
+//        new Sym(<method-name>),
+    new YetiParser.Sym(sam.name),
+//        new XNode("argument-list", new Node[] {
+//            new Sym(<arg/type>),
+//            new Sym(<arg-name>),
+//            ... }),
+    new YetiParser.XNode("argument-list", argnodes),
+//        new Seq( .../* body of method */...) }), //TODO: read more about Seq: what's EVAL, seqKind? how analyze() handles it?
+//    new YetiParser.Seq(new YetiParser.Node[]{call}, null) }),
+    call }),
+});
+YetiParser.Node cnew = new YetiParser.Seq(new YetiParser.Node[] {
+c,
+new YetiParser.XNode("new", new YetiParser.Node[] {
+    new YetiParser.Sym("MCDBG$GENERATED$ID") }),
+}, null);
+System.out.println("MCDBG " + cnew.str());
+args[i] = YetiAnalyzer.analyze(cnew, scope, 99); //FIXME: is this ok?
+
+                
+////the above would be result of Parser.parse(); then, analyze(c, scope, 0); would be called; or,
+////more like analSeq(...) somehow through analyze(...)
+//            } else if (nodes[i].kind == "class") {
+//                Scope scope_[] = { scope };
+//                addSeq(last, new SeqExpr(
+//                    MethodDesc.defineClass((XNode) nodes[i],
+//                        seq.seqKind instanceof TopLevel &&
+//                            ((TopLevel) seq.seqKind).isModule, scope_, depth)));
+//                scope = scope_[0];
+//            } /*else { //MC: including "new", I believe
+//                Code code = analyze(nodes[i], scope, depth);
+//                expectUnit(code, nodes[i], scope, "Unit type expected here",
+//                    seq.seqKind != "{}" ? null :
+//                    "\n    (use , instead of ; to separate structure fields)");
+//                addSeq(last, new SeqExpr(code));
+//            }*/
+//        Node expr = nodes[nodes.length - 1]; //MC: here we'd get "new", I believe
+//        Code code = analyze(expr, scope, depth);
+//        //return wrapSeq(code, last);
+
+            }
+        }
+        return m;
+    }
+
     static Code objectRef(ObjectRefOp ref, Scope scope, int depth) {
         Code obj = null;
         YType t = null;
@@ -452,9 +539,9 @@ public final class YetiAnalyzer extends YetiType {
             return new ClassField(obj, f, ref.line);
         }
         Code[] args = mapArgs(0, ref.arguments, scope, depth);
-        return new MethodCall(obj,
+        return new MethodCall(obj, wrapSamArgs(
                     JavaType.resolveMethod(ref, t, args, obj == null)
-                        .check(ref, scope.ctx.packageName, 0), args, ref.line);
+                        .check(ref, scope.ctx.packageName, 0), args, scope), args, ref.line);
     }
 
     static Code newArray(XNode op, Scope scope, int depth) {

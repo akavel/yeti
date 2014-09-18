@@ -878,8 +878,11 @@ public class YetiType implements YetiParser {
 
     private static BindRef resolveRef(String sym, Node where,
                                       Scope scope, Scope[] r) {
+        System.out.println("MCDBG sym='" + sym + "'...");
         for (; scope != null; scope = scope.outer) {
+            System.out.println("MCDBG   name='" + scope.name + "', binder=" + scope.binder);
             if (scope.name == sym && scope.binder != null) {
+                System.out.println("MCDBG   FOUND!");
                 r[0] = scope;
                 return scope.binder.getRef(where.line);
             }
@@ -887,6 +890,7 @@ public class YetiType implements YetiParser {
                 return scope.closure.refProxy(
                             resolveRef(sym, where, scope.outer, r));
         }
+        System.out.println("MCDBG   BOOOooo....");
         throw new CompileException(where, "Unknown identifier: " + sym);
     }
 
