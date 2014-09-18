@@ -49,6 +49,10 @@ public final class YetiAnalyzer extends YetiType {
         Scope typeScope;
         boolean isModule;
     }
+	
+	final class CodeNode extends Node {
+		Code code;
+	}
 
     static final String NONSENSE_STRUCT = "No sense in empty struct";
 
@@ -1033,6 +1037,8 @@ public final class YetiAnalyzer extends YetiType {
     }
 
     static Code analSeq(Seq seq, Scope scope, int depth) {
+		if (seq.seqKind instanceof Code)
+			return (Code) seq.seqKind;
         Node[] nodes = seq.st;
         BindExpr[] bindings = new BindExpr[nodes.length];
         SeqExpr[] last = { null, null };

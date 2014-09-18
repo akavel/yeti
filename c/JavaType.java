@@ -595,6 +595,23 @@ class JavaType implements Cloneable {
             }
         }
     }
+	
+	static final int SAM_MASK = Opcodes.ACC_ABSTRACT | Opcodes.ACC_FINAL | Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC;
+	static final int SAM_BITS = Opcodes.ACC_ABSTRACT | Opcodes.ACC_PUBLIC;
+	
+	// single abstract method, if available
+	Method getSAM() {
+		//TODO: also we must have 0-argument constructor -- verify this
+		Method sam = null;
+		for (int i=0; i<methods.length; i++) { //FIXME: verify we're handling "final" correctly
+			if (methods[i].isBuiltin() || ((methods[i].access & SAM_MASK) != SAM_BITS)
+				continue;
+			if (sam != null)
+				return null; // must be exactly 1 such method to be SAM
+			sam = methods[i];
+		}
+		return sam;
+	}
 
     static final String[] NUMBER_TYPES = {
         "Ljava/lang/Byte;",
@@ -661,21 +678,15 @@ class JavaType implements Cloneable {
                     ? 0 : -1;
         case YetiType.FUN:
 			System.out.println("MCDBG " + description + " FROM " + from);
-			List abstracts = new ArrayList();
-			for (int i=0; i<methods.length; i++) //FIXME: verify we're handling "final" correctly
-				if (abstracts.size() <= 1 && !methods[i].isBuiltin() &&
-					((methods[i].access & (Opcodes.ACC_ABSTRACT | Opcodes.ACC_FINAL | Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC)) ==
-						(Opcodes.ACC_ABSTRACT | Opcodes.ACC_PUBLIC)))
-					abstracts.add(methods[i]);
-			if (abstracts.size()==1) {
+			Method sam = getSAM();
+			if (sam != null) {
 				System.out.println("MCDBG one public abstract...");
 				//new Exception().printStackTrace();
 				//TODO: check all args for assignability Java->Yeti
 				//TODO: check retval for assignability Yeti->Java
 				//FIXME: add some protection to be sure we won't get into infinite recursion
 				//FIXME: allow retval to also be any value normally convertible Yeti->Java
-				Method m = (Method) abstracts.get(0);
-				YType margs[] = m.arguments;
+				YType margs[] = sam.arguments;
 				YType yarg = from;
 				boolean ok = true;
 				for (int i=0; i<margs.length; i++) {
@@ -698,7 +709,7 @@ class JavaType implements Cloneable {
 					yarg = funarg[1];
 				}
 				if (ok) {
-					ok = isAssignable(m.returnType, yarg, true) < 0; //FIXME: true here, or false?
+					ok = isAssignable(sam.returnType, yarg, true) < 0; //FIXME: true here, or false?
 				}
 				if (ok) {
 					System.out.println("MCDBG Yeti lambda seems assignable to Java SUM");
@@ -934,49 +945,76 @@ class JavaType implements Cloneable {
         }
         if (res != -1) {
 			for (int i=0; i<args.length; i++) {
-				if (args[i].type.type == YetiType.FUN && m.arguments[i].description != "Lyeti/lang/Fun;") {
+				if (args[i].type.type == YetiType.FUN && m.arguments[i].type == YetiType.JAVA && m.arguments[i].javaType.description != "Lyeti/lang/Fun;") {
+					JavaType jt = m.arguments[i].javaType;
+					Method sam = jt.getSAM();
+					Node[] argnodes = new Node[sam.arguments.length*2];
+					for (int j=0; j<sam.arguments.length; j++) {
+						argnodes[j] = new Sym(sam.arguments[j].javaType.dottedName());
+						argnodes[j+1] = new Sym("arg" + j);
+					}
 					//TODO: first, we must try to do the same what happens when "class" token is found (create class?)
 					//TODO: the created class must inherit from specified interface/class m.arguments[i]
 					//TODO: in the created class, we must somehow inject the Code from args[i] in appropriate method
 					//TODO: in injected Code, we must somehow bind lambda arguments to method arguments / call the lambda w/them -- see '== ""', apply(), I believe
+					Node call = new Seq(null, args[i]);
+					for (int j=0; j<sam.arguments.length; j++) {
+						BinOp op = new BinOp("", 2, true);
+						op.left = call;
+						op.right = new Sym("arg" + j);
+						//TODO: op.parent = ???
+						call = op;
+					}
+					if (sam.arguments.length == 0) {
+						//FIXME: verify if this is ok
+						BinOp op = new BinOp("", 2, true);
+						op.left = call;
+						op.right = new XNode("()");
+						call = op;
+					}
 					//TODO: then we must substitute args[i] with NewExpr(...) appropriately
 					
-//TODO: verify that the extended class/interface has a constructor with no arguments
-Node c = new XNode("class",
-	new Node[] {
-		new Sym("MCDBG$GENERATED$ID"), //TODO: generated ID
-		new XNode("argument-list", new Node[0]),
-		new XNode("extends", new Node[] {
-			new Sym(<name/of/extended/class>),
-			new XNode("arguments", null) }),
-		new XNode("method", new Node[] {
-			new Sym(<return/type>),
-			new Sym(<method-name>),
-			new XNode("argument-list", new Node[] {
-				new Sym(<arg/type>),
-				new Sym(<arg-name>),
-				... }),
-			new Seq( .../* body of method */...) }), //TODO: read more about Seq: what's EVAL, seqKind? how analyze() handles it?
-	})
-//the above would be result of Parser.parse(); then, analyze(c, scope, 0); would be called; or,
-//more like analSeq(...) somehow through analyze(...)
-            } else if (nodes[i].kind == "class") {
-                Scope scope_[] = { scope };
-                addSeq(last, new SeqExpr(
-                    MethodDesc.defineClass((XNode) nodes[i],
-                        seq.seqKind instanceof TopLevel &&
-                            ((TopLevel) seq.seqKind).isModule, scope_, depth)));
-                scope = scope_[0];
-            } /*else { //MC: including "new", I believe
-                Code code = analyze(nodes[i], scope, depth);
-                expectUnit(code, nodes[i], scope, "Unit type expected here",
-                    seq.seqKind != "{}" ? null :
-                    "\n    (use , instead of ; to separate structure fields)");
-                addSeq(last, new SeqExpr(code));
-            }*/
-        Node expr = nodes[nodes.length - 1]; //MC: here we'd get "new", I believe
-        Code code = analyze(expr, scope, depth);
-		//return wrapSeq(code, last);
+Node c = new XNode("class", new Node[] {
+	new Sym("MCDBG$GENERATED$ID"), //TODO: generated ID
+	new XNode("argument-list", new Node[0]),
+	new XNode("extends", new Node[] {
+		new Sym(jt.dottedName()),
+		new XNode("arguments", null) }),
+	new XNode("method", new Node[] {
+//		new Sym(<return/type>),
+		new Sym(sam.returnType.dottedName()),
+//		new Sym(<method-name>),
+		new Sym(sam.name),
+//		new XNode("argument-list", new Node[] {
+//			new Sym(<arg/type>),
+//			new Sym(<arg-name>),
+//			... }),
+		new XNode("argument-list", argnodes),
+//		new Seq( .../* body of method */...) }), //TODO: read more about Seq: what's EVAL, seqKind? how analyze() handles it?
+		new Seq(call, null) }),
+});
+args[i] = analyze(c, new Scope(), 99);
+
+					
+////the above would be result of Parser.parse(); then, analyze(c, scope, 0); would be called; or,
+////more like analSeq(...) somehow through analyze(...)
+//            } else if (nodes[i].kind == "class") {
+//                Scope scope_[] = { scope };
+//                addSeq(last, new SeqExpr(
+//                    MethodDesc.defineClass((XNode) nodes[i],
+//                        seq.seqKind instanceof TopLevel &&
+//                            ((TopLevel) seq.seqKind).isModule, scope_, depth)));
+//                scope = scope_[0];
+//            } /*else { //MC: including "new", I believe
+//                Code code = analyze(nodes[i], scope, depth);
+//                expectUnit(code, nodes[i], scope, "Unit type expected here",
+//                    seq.seqKind != "{}" ? null :
+//                    "\n    (use , instead of ; to separate structure fields)");
+//                addSeq(last, new SeqExpr(code));
+//            }*/
+//        Node expr = nodes[nodes.length - 1]; //MC: here we'd get "new", I believe
+//        Code code = analyze(expr, scope, depth);
+//		//return wrapSeq(code, last);
 
 				}
 			}
