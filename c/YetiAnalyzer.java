@@ -480,7 +480,6 @@ c,
 new YetiParser.XNode("new", new YetiParser.Node[] {
     new YetiParser.Sym("MCDBG$GENERATED$ID") }),
 }, null);
-System.out.println("MCDBG " + cnew.str());
 args[i] = YetiAnalyzer.analyze(cnew, scope, 99); //FIXME: is this ok?
 
                 

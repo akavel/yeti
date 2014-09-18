@@ -679,11 +679,9 @@ class JavaType implements Cloneable {
         case YetiType.FUN:
             if (description == "Lyeti/lang/Fun;")
                 return 0;
-			System.out.println("MCDBG " + description + " FROM " + from);
             resolve();
 			Method sam = getSAM();
 			if (sam != null) {
-				System.out.println("MCDBG one public abstract...");
 				//new Exception().printStackTrace();
 				//TODO: check all args for assignability Java->Yeti
 				//TODO: check retval for assignability Yeti->Java
@@ -694,18 +692,15 @@ class JavaType implements Cloneable {
 				boolean ok = true;
 				for (int i=0; i<margs.length; i++) {
 					if (yarg.type != YetiType.FUN) {
-						System.out.println("MCDBG non-FUN yarg " + yarg);
 						ok = false;
 						break;
 					}
 					YType funarg[] = from.param;
 					if (funarg == null || funarg == YetiType.NO_PARAM || funarg.length!=2) {
-						System.out.println("MCDBG bad funarg " + funarg + " at i=" + i);
 						ok = false;
 						break;
 					}
 					if (isAssignable(funarg[0], margs[i], true) < 0) { //FIXME: true here, or false?
-						System.out.println("MCDBG not assignable " + funarg[0] + " := " + margs[i]);
 						ok = false;
 						break;
 					}
@@ -715,14 +710,11 @@ class JavaType implements Cloneable {
 					ok = isAssignable(sam.returnType, yarg, true) < 0; //FIXME: true here, or false?
 				}
 				if (ok) {
-					System.out.println("MCDBG Yeti lambda seems assignable to Java SUM");
 					return 9; //FIXME: what value here?
 				} else {
-					System.out.println("MCDBG cannot assign Yeti lambda as Java SUM");
 				}
 			}
 			for (int i=0; i<methods.length; i++)
-				System.out.println("MCDBG  " + methods[i] + (methods[i].isBuiltin() ? "*" : "") + " " + methods[i].access);
 			//+ " WITH " + java.util.Arrays.toString(methods));
 			//TODO: check if we're "one method interface/abstract class"
             return -1;

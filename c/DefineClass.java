@@ -61,7 +61,6 @@ final class MethodDesc extends YetiType {
 
     Scope bindScope(Scope scope, JavaClass regField, Scope fields[]) {
         for (int i = 0; i < arguments.length; ++i) {
-            System.out.println("MCDBG bindScope i=" + i + ", names[i]=" + names[i] + ", arguments[i]=" + arguments[i]);
             scope = new Scope(scope, names[i], arguments[i]);
             if (regField != null) {
                 Binder field =
