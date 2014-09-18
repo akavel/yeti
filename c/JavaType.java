@@ -315,25 +315,25 @@ class JavaType implements Cloneable {
             }
             return descr = result.toString();
         }
-		
-		private static final Map BUILTINS = new HashMap();
-		static {
-			BUILTINS.put("int hashCode()", new Object());
-			BUILTINS.put("void notify()", new Object());
-			BUILTINS.put("void notifyAll()", new Object());
-			BUILTINS.put("~java.lang.Class getClass()", new Object());
-			BUILTINS.put("~java.lang.Object clone()", new Object());
-			BUILTINS.put("~java.lang.String toString()", new Object());
-			BUILTINS.put("void wait(long)", new Object());
-			BUILTINS.put("void wait(long, int)", new Object());
-			BUILTINS.put("boolean equals(~java.lang.Object)", new Object());
-			BUILTINS.put("void wait()", new Object());
-			BUILTINS.put("void finalize()", new Object());
-		}
-		
-		boolean isBuiltin() {
-			return BUILTINS.containsKey(this.toString());
-		}
+
+        private static final Map BUILTINS = new HashMap();
+        static {
+            BUILTINS.put("int hashCode()", new Object());
+            BUILTINS.put("void notify()", new Object());
+            BUILTINS.put("void notifyAll()", new Object());
+            BUILTINS.put("~java.lang.Class getClass()", new Object());
+            BUILTINS.put("~java.lang.Object clone()", new Object());
+            BUILTINS.put("~java.lang.String toString()", new Object());
+            BUILTINS.put("void wait(long)", new Object());
+            BUILTINS.put("void wait(long, int)", new Object());
+            BUILTINS.put("boolean equals(~java.lang.Object)", new Object());
+            BUILTINS.put("void wait()", new Object());
+            BUILTINS.put("void finalize()", new Object());
+        }
+
+        boolean isBuiltin() {
+            return BUILTINS.containsKey(this.toString());
+        }
     }
 
     private static final JavaType[] EMPTY_JTARR = {};
@@ -450,7 +450,7 @@ class JavaType implements Cloneable {
         if (from.type != YetiType.JAVA && to.type != YetiType.JAVA &&
                 to.type != YetiType.JAVA_ARRAY) {
             throw new CompileException(cast,
-                "Illegal cast from " + from + " to " + to + 
+                "Illegal cast from " + from + " to " + to +
                 " (neither side is java object)");
         }
         JavaType src = getClass(from);
@@ -595,23 +595,23 @@ class JavaType implements Cloneable {
             }
         }
     }
-	
-	static final int SAM_MASK = Opcodes.ACC_ABSTRACT | Opcodes.ACC_FINAL | Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC;
-	static final int SAM_BITS = Opcodes.ACC_ABSTRACT | Opcodes.ACC_PUBLIC;
-	
-	// single abstract method, if available
+
+    static final int SAM_MASK = Opcodes.ACC_ABSTRACT | Opcodes.ACC_FINAL | Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC;
+    static final int SAM_BITS = Opcodes.ACC_ABSTRACT | Opcodes.ACC_PUBLIC;
+
+    // single abstract method, if available
     Method getSAM() {
-		//TODO: also we must have 0-argument constructor -- verify this
-		Method sam = null;
-		for (int i=0; i<methods.length; i++) { //FIXME: verify we're handling "final" correctly
-			if (methods[i].isBuiltin() || ((methods[i].access & SAM_MASK) != SAM_BITS))
-				continue;
-			if (sam != null)
-				return null; // must be exactly 1 such method to be SAM
-			sam = methods[i];
-		}
-		return sam;
-	}
+        //TODO: also we must have 0-argument constructor -- verify this
+        Method sam = null;
+        for (int i=0; i<methods.length; i++) { //FIXME: verify we're handling "final" correctly
+            if (methods[i].isBuiltin() || ((methods[i].access & SAM_MASK) != SAM_BITS))
+                continue;
+            if (sam != null)
+                return null; // must be exactly 1 such method to be SAM
+            sam = methods[i];
+        }
+        return sam;
+    }
 
     static final String[] NUMBER_TYPES = {
         "Ljava/lang/Byte;",
@@ -680,43 +680,43 @@ class JavaType implements Cloneable {
             if (description == "Lyeti/lang/Fun;")
                 return 0;
             resolve();
-			Method sam = getSAM();
-			if (sam != null) {
-				//new Exception().printStackTrace();
-				//TODO: check all args for assignability Java->Yeti
-				//TODO: check retval for assignability Yeti->Java
-				//FIXME: add some protection to be sure we won't get into infinite recursion
-				//FIXME: allow retval to also be any value normally convertible Yeti->Java
-				YType margs[] = sam.arguments;
-				YType yarg = from;
-				boolean ok = true;
-				for (int i=0; i<margs.length; i++) {
-					if (yarg.type != YetiType.FUN) {
-						ok = false;
-						break;
-					}
-					YType funarg[] = from.param;
-					if (funarg == null || funarg == YetiType.NO_PARAM || funarg.length!=2) {
-						ok = false;
-						break;
-					}
-					if (isAssignable(funarg[0], margs[i], true) < 0) { //FIXME: true here, or false?
-						ok = false;
-						break;
-					}
-					yarg = funarg[1];
-				}
-				if (ok) {
-					ok = isAssignable(sam.returnType, yarg, true) < 0; //FIXME: true here, or false?
-				}
-				if (ok) {
-					return 9; //FIXME: what value here?
-				} else {
-				}
-			}
-			for (int i=0; i<methods.length; i++)
-			//+ " WITH " + java.util.Arrays.toString(methods));
-			//TODO: check if we're "one method interface/abstract class"
+            Method sam = getSAM();
+            if (sam != null) {
+                //new Exception().printStackTrace();
+                //TODO: check all args for assignability Java->Yeti
+                //TODO: check retval for assignability Yeti->Java
+                //FIXME: add some protection to be sure we won't get into infinite recursion
+                //FIXME: allow retval to also be any value normally convertible Yeti->Java
+                YType margs[] = sam.arguments;
+                YType yarg = from;
+                boolean ok = true;
+                for (int i=0; i<margs.length; i++) {
+                    if (yarg.type != YetiType.FUN) {
+                        ok = false;
+                        break;
+                    }
+                    YType funarg[] = from.param;
+                    if (funarg == null || funarg == YetiType.NO_PARAM || funarg.length!=2) {
+                        ok = false;
+                        break;
+                    }
+                    if (isAssignable(funarg[0], margs[i], true) < 0) { //FIXME: true here, or false?
+                        ok = false;
+                        break;
+                    }
+                    yarg = funarg[1];
+                }
+                if (ok) {
+                    ok = isAssignable(sam.returnType, yarg, true) < 0; //FIXME: true here, or false?
+                }
+                if (ok) {
+                    return 9; //FIXME: what value here?
+                } else {
+                }
+            }
+            for (int i=0; i<methods.length; i++)
+            //+ " WITH " + java.util.Arrays.toString(methods));
+            //TODO: check if we're "one method interface/abstract class"
             return -1;
         case YetiType.MAP: {
             switch (from.param[2].deref().type) {
@@ -1095,7 +1095,7 @@ class JavaType implements Cloneable {
     }
 
 /*    static YType toStructType(YType object) {
-        return null;   
+        return null;
     }*/
 
     private static List parentList(JavaType t) {

@@ -49,10 +49,10 @@ public final class YetiAnalyzer extends YetiType {
         Scope typeScope;
         boolean isModule;
     }
-	
-	final class CodeNode extends Node {
-		Code code;
-	}
+
+    final class CodeNode extends Node {
+        Code code;
+    }
 
     static final String NONSENSE_STRUCT = "No sense in empty struct";
 
@@ -134,7 +134,7 @@ public final class YetiAnalyzer extends YetiType {
                 String name = x.expr[0].sym();
                 Code[] args = mapArgs(1, x.expr, scope, depth);
                 ClassBinding cb = resolveFullClass(name, scope, true, x);
-				//TODO: handle SUM here too
+                //TODO: handle SUM here too
                 return new NewExpr(
                     JavaType.resolveConstructor(x, cb.type, args, true)
                             .check(x, scope.ctx.packageName, 0),
@@ -453,7 +453,7 @@ public final class YetiAnalyzer extends YetiType {
                     call = op;
                 }
                 //TODO: then we must substitute args[i] with NewExpr(...) appropriately
-                
+
 YetiParser.Node c = new YetiParser.XNode("class", new YetiParser.Node[] {
 new YetiParser.Sym("MCDBG$GENERATED$ID"), //TODO: generated ID
 new YetiParser.XNode("argument-list", new YetiParser.Node[0]),
@@ -482,7 +482,7 @@ new YetiParser.XNode("new", new YetiParser.Node[] {
 }, null);
 args[i] = YetiAnalyzer.analyze(cnew, scope, 99); //FIXME: is this ok?
 
-                
+
 ////the above would be result of Parser.parse(); then, analyze(c, scope, 0); would be called; or,
 ////more like analSeq(...) somehow through analyze(...)
 //            } else if (nodes[i].kind == "class") {
@@ -609,8 +609,8 @@ args[i] = YetiAnalyzer.analyze(cnew, scope, 99); //FIXME: is this ok?
                                            "Cannot use #1 as a function", ex);
             }
             YType argt = argCode.type.deref();
-			ex.printStackTrace();
-			new Exception().printStackTrace();
+            ex.printStackTrace();
+            new Exception().printStackTrace();
             String s = "Cannot apply #1 function";
             if (where != arg && where instanceof BinOp) {
                 BinOp op = (BinOp) where;
@@ -647,7 +647,7 @@ args[i] = YetiAnalyzer.analyze(cnew, scope, 99); //FIXME: is this ok?
                         "Unexpected " + op.op + " in field selector");
                 parts.addFirst(getSelectorSym(op, op.right).sym);
             }
-            
+
             parts.addFirst(getSelectorSym(section, x).sym);
             String[] fields =
                 (String[]) parts.toArray(new String[parts.size()]);
@@ -1123,8 +1123,8 @@ args[i] = YetiAnalyzer.analyze(cnew, scope, 99); //FIXME: is this ok?
     }
 
     static Code analSeq(Seq seq, Scope scope, int depth) {
-		if (seq.seqKind instanceof Code)
-			return (Code) seq.seqKind;
+        if (seq.seqKind instanceof Code)
+            return (Code) seq.seqKind;
         Node[] nodes = seq.st;
         BindExpr[] bindings = new BindExpr[nodes.length];
         SeqExpr[] last = { null, null };
@@ -1226,7 +1226,7 @@ args[i] = YetiAnalyzer.analyze(cnew, scope, 99); //FIXME: is this ok?
         if (bind.type != null)
             isOp(bind, null, to, scope, depth);
         return lambda(to, (XNode) bind.expr, scope, depth);
-    } 
+    }
 
     static Code lambda(Function to, XNode lambda, Scope scope, int depth) {
         ++depth;
@@ -1639,7 +1639,7 @@ args[i] = YetiAnalyzer.analyze(cnew, scope, 99); //FIXME: is this ok?
                 if ((compiler.globalFlags & Compiler.GF_NO_IMPORT) != 0)
                     throw new CompileException(l, "load is disabled");
                 parser.loads = (XNode) l.expr[1];
-                ModuleType t = 
+                ModuleType t =
                    YetiTypeVisitor.getType(compiler, l, l.expr[0].sym(), false);
                 l.expr[1] = t;
                 if (depsModifiedTime < t.lastModified)
