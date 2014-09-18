@@ -604,7 +604,7 @@ class JavaType implements Cloneable {
 		//TODO: also we must have 0-argument constructor -- verify this
 		Method sam = null;
 		for (int i=0; i<methods.length; i++) { //FIXME: verify we're handling "final" correctly
-			if (methods[i].isBuiltin() || ((methods[i].access & SAM_MASK) != SAM_BITS)
+			if (methods[i].isBuiltin() || ((methods[i].access & SAM_MASK) != SAM_BITS))
 				continue;
 			if (sam != null)
 				return null; // must be exactly 1 such method to be SAM
@@ -944,56 +944,58 @@ class JavaType implements Cloneable {
             }
         }
         if (res != -1) {
+			Method m = ma[res];
 			for (int i=0; i<args.length; i++) {
 				if (args[i].type.type == YetiType.FUN && m.arguments[i].type == YetiType.JAVA && m.arguments[i].javaType.description != "Lyeti/lang/Fun;") {
 					JavaType jt = m.arguments[i].javaType;
 					Method sam = jt.getSAM();
-					Node[] argnodes = new Node[sam.arguments.length*2];
+					YetiParser.Node[] argnodes = new YetiParser.Node[sam.arguments.length*2];
 					for (int j=0; j<sam.arguments.length; j++) {
-						argnodes[j] = new Sym(sam.arguments[j].javaType.dottedName());
-						argnodes[j+1] = new Sym("arg" + j);
+						argnodes[j] = new YetiParser.Sym(sam.arguments[j].javaType.dottedName());
+						argnodes[j+1] = new YetiParser.Sym("arg" + j);
 					}
 					//TODO: first, we must try to do the same what happens when "class" token is found (create class?)
 					//TODO: the created class must inherit from specified interface/class m.arguments[i]
 					//TODO: in the created class, we must somehow inject the Code from args[i] in appropriate method
 					//TODO: in injected Code, we must somehow bind lambda arguments to method arguments / call the lambda w/them -- see '== ""', apply(), I believe
-					Node call = new Seq(null, args[i]);
+					YetiParser.Node call = new YetiParser.Seq(null, args[i]);
 					for (int j=0; j<sam.arguments.length; j++) {
-						BinOp op = new BinOp("", 2, true);
+						YetiParser.BinOp op = new YetiParser.BinOp("", 2, true);
 						op.left = call;
-						op.right = new Sym("arg" + j);
+						op.right = new YetiParser.Sym("arg" + j);
 						//TODO: op.parent = ???
 						call = op;
 					}
 					if (sam.arguments.length == 0) {
 						//FIXME: verify if this is ok
-						BinOp op = new BinOp("", 2, true);
+						YetiParser.BinOp op = new YetiParser.BinOp("", 2, true);
 						op.left = call;
-						op.right = new XNode("()");
+						op.right = new YetiParser.XNode("()");
 						call = op;
 					}
 					//TODO: then we must substitute args[i] with NewExpr(...) appropriately
 					
-Node c = new XNode("class", new Node[] {
-	new Sym("MCDBG$GENERATED$ID"), //TODO: generated ID
-	new XNode("argument-list", new Node[0]),
-	new XNode("extends", new Node[] {
-		new Sym(jt.dottedName()),
-		new XNode("arguments", null) }),
-	new XNode("method", new Node[] {
+YetiParser.Node c = new YetiParser.XNode("class", new YetiParser.Node[] {
+	new YetiParser.Sym("MCDBG$GENERATED$ID"), //TODO: generated ID
+	new YetiParser.XNode("argument-list", new YetiParser.Node[0]),
+	new YetiParser.XNode("extends", new YetiParser.Node[] {
+		new YetiParser.Sym(jt.dottedName()),
+//		new YetiParser.XNode("arguments", null) }),
+		new YetiParser.XNode("arguments") }),
+	new YetiParser.XNode("method", new YetiParser.Node[] {
 //		new Sym(<return/type>),
-		new Sym(sam.returnType.dottedName()),
+		new YetiParser.Sym(sam.returnType.javaType.dottedName()),
 //		new Sym(<method-name>),
-		new Sym(sam.name),
+		new YetiParser.Sym(sam.name),
 //		new XNode("argument-list", new Node[] {
 //			new Sym(<arg/type>),
 //			new Sym(<arg-name>),
 //			... }),
-		new XNode("argument-list", argnodes),
+		new YetiParser.XNode("argument-list", argnodes),
 //		new Seq( .../* body of method */...) }), //TODO: read more about Seq: what's EVAL, seqKind? how analyze() handles it?
-		new Seq(call, null) }),
+		new YetiParser.Seq(new YetiParser.Node[]{call}, null) }),
 });
-args[i] = analyze(c, new Scope(), 99);
+args[i] = YetiAnalyzer.analyze(c, new Scope(null, null, null), 99); //FIXME: is this ok?
 
 					
 ////the above would be result of Parser.parse(); then, analyze(c, scope, 0); would be called; or,
