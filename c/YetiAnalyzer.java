@@ -50,10 +50,6 @@ public final class YetiAnalyzer extends YetiType {
         boolean isModule;
     }
 
-    final class CodeNode extends Node {
-        Code code;
-    }
-
     static final String NONSENSE_STRUCT = "No sense in empty struct";
 
     static void unusedBinding(Scope scope, Bind bind) {
