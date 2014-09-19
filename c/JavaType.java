@@ -602,10 +602,10 @@ class JavaType implements Cloneable {
     Method getSAM() {
         //TODO: test that we fail for 1 constructor with nonempty args
         //TODO: test that we succeed for 1 constructor with empty args list
-		if (constructors.length > 1)
-			return null;
-		if (constructors.length == 1 && !"<init>()".equals(constructors[0]))
-			return null;
+        if (constructors.length > 1)
+            return null;
+        if (constructors.length == 1 && !"<init>()".equals(constructors[0]))
+            return null;
         Method sam = null;
         //FIXME: verify we're handling "final" classes correctly
         for (int i = 0; i < methods.length; ++i) {
