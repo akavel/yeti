@@ -130,7 +130,7 @@ public final class YetiAnalyzer extends YetiType {
                 String name = x.expr[0].sym();
                 Code[] args = mapArgs(1, x.expr, scope, depth);
                 ClassBinding cb = resolveFullClass(name, scope, true, x);
-                //TODO: handle SUM here too
+                //TODO: handle SUM here too, and test
                 return new NewExpr(
                     JavaType.resolveConstructor(x, cb.type, args, true)
                             .check(x, scope.ctx.packageName, 0),
@@ -421,9 +421,9 @@ public final class YetiAnalyzer extends YetiType {
     static JavaType.Method wrapSamArgs(JavaType.Method m, Code[] args, Scope scope) {
         //TODO: maybe some day this could actually be done on every assignment etc, not only for method calls
         for (int i=0; i<args.length; i++) {
-            if (args[i].type.type == YetiType.FUN && m.arguments[i].type == YetiType.JAVA && m.arguments[i].javaType.description != "Lyeti/lang/Fun;") {
-                JavaType jt = m.arguments[i].javaType;
-                JavaType.Method sam = jt.getSAM();
+            YType marg = m.arguments[i];
+            if (args[i].type.type == YetiType.FUN && marg.type == YetiType.JAVA && marg.javaType.description != "Lyeti/lang/Fun;") {
+                JavaType.Method sam = marg.javaType.getSAM();
                 YetiParser.Node[] argnodes = new YetiParser.Node[sam.arguments.length*2];
                 for (int j=0; j<sam.arguments.length; j++) {
                     argnodes[2*j] = new YetiParser.Sym(sam.arguments[j].javaType.str().replace("~", "").replace(".", "/"));
@@ -454,7 +454,7 @@ YetiParser.Node c = new YetiParser.XNode("class", new YetiParser.Node[] {
 new YetiParser.Sym("MCDBG$GENERATED$ID"), //TODO: generated ID
 new YetiParser.XNode("argument-list", new YetiParser.Node[0]),
 new YetiParser.XNode("extends", new YetiParser.Node[] {
-    new YetiParser.Sym(jt.str().replace("~", "").replace(".", "/")),
+    new YetiParser.Sym(marg.javaType.str().replace("~", "").replace(".", "/")),
 //        new YetiParser.XNode("arguments", null) }),
     new YetiParser.XNode("arguments") }),
 new YetiParser.XNode("method", new YetiParser.Node[] {
@@ -534,6 +534,7 @@ args[i] = YetiAnalyzer.analyze(cnew, scope, 99); //FIXME: is this ok?
             return new ClassField(obj, f, ref.line);
         }
         Code[] args = mapArgs(0, ref.arguments, scope, depth);
+        //TODO: add Yeti tests for wrapSamArgs working
         return new MethodCall(obj, wrapSamArgs(
                     JavaType.resolveMethod(ref, t, args, obj == null)
                         .check(ref, scope.ctx.packageName, 0), args, scope), args, ref.line);
