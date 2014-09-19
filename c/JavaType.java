@@ -602,7 +602,8 @@ class JavaType implements Cloneable {
     Method getSAM() {
         //TODO: also we must have 0-argument constructor -- verify this
         Method sam = null;
-        for (int i=0; i<methods.length; i++) { //FIXME: verify we're handling "final" correctly
+        //FIXME: verify we're handling "final" classes correctly
+        for (int i=0; i<methods.length; i++) {
             if (methods[i].isBuiltin() || ((methods[i].access & SAM_MASK) != SAM_BITS))
                 continue;
             if (sam != null)
@@ -681,41 +682,25 @@ class JavaType implements Cloneable {
             resolve();
             Method sam = getSAM();
             if (sam != null) {
-                //new Exception().printStackTrace();
-                //TODO: check all args for assignability Java->Yeti
-                //TODO: check retval for assignability Yeti->Java
+                //TODO: add unit tests to verify that retval assignability checking Yeti->Java is correct
+                //TODO: when testing retval assignability, also check num. of arguments too big/small
                 //FIXME: add some protection to be sure we won't get into infinite recursion
                 //FIXME: allow retval to also be any value normally convertible Yeti->Java
                 YType margs[] = sam.arguments;
                 YType yarg = from;
-                boolean ok = true;
                 for (int i=0; i<margs.length; i++) {
-                    if (yarg.type != YetiType.FUN) {
-                        ok = false;
-                        break;
-                    }
+                    if (yarg.type != YetiType.FUN)
+                        return -1;
                     YType funarg[] = from.param;
-                    if (funarg == null || funarg == YetiType.NO_PARAM || funarg.length!=2) {
-                        ok = false;
-                        break;
-                    }
-                    if (isAssignable(funarg[0], margs[i], true) < 0) { //FIXME: true here, or false?
-                        ok = false;
-                        break;
-                    }
+                    if (funarg == null || funarg == YetiType.NO_PARAM || funarg.length != 2)
+                        return -1;
+                    if (isAssignable(funarg[0], margs[i], true) < 0) //FIXME: true here, or false?
+                        return -1;
                     yarg = funarg[1];
                 }
-                if (ok) {
-                    ok = isAssignable(sam.returnType, yarg, true) < 0; //FIXME: true here, or false?
-                }
-                if (ok) {
-                    return 9; //FIXME: what value here?
-                } else {
-                }
+                if (isAssignable(sam.returnType, yarg, true) < 0) //FIXME: true here, or false?
+                    return 9; //FIXME: what value here? would be nice to add args assignability
             }
-            for (int i=0; i<methods.length; i++)
-            //+ " WITH " + java.util.Arrays.toString(methods));
-            //TODO: check if we're "one method interface/abstract class"
             return -1;
         case YetiType.MAP: {
             switch (from.param[2].deref().type) {
