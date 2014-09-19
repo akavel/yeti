@@ -506,10 +506,10 @@ public final class YetiAnalyzer extends YetiType {
             return new ClassField(obj, f, ref.line);
         }
         Code[] args = mapArgs(0, ref.arguments, scope, depth);
-        //TODO: add Yeti tests for wrapSamArgs working
-        return new MethodCall(obj, wrapSamArgs(
-                    JavaType.resolveMethod(ref, t, args, obj == null)
-                        .check(ref, scope.ctx.packageName, 0), args, scope), args, ref.line);
+        //TODO: add Yeti tests for wrapSamArgs
+        JavaType.Method m = JavaType.resolveMethod(ref, t, args, obj == null)
+                                    .check(ref, scope.ctx.packageName, 0);
+        return new MethodCall(obj, wrapSamArgs(m, args, scope), args, ref.line);
     }
 
     static Code newArray(XNode op, Scope scope, int depth) {
