@@ -692,7 +692,8 @@ class JavaType implements Cloneable {
                     if (yarg.type != YetiType.FUN)
                         return -1;
                     YType funarg[] = from.param;
-                    if (funarg == null || funarg == YetiType.NO_PARAM || funarg.length != 2)
+                    if (funarg == null || funarg == YetiType.NO_PARAM ||
+                        funarg.length != 2)
                         return -1;
                     if (isAssignable(funarg[0], margs[i], true) < 0) //FIXME: true here, or false?
                         return -1;
