@@ -691,7 +691,6 @@ class JavaType implements Cloneable {
                 //TODO: add unit tests to verify that retval assignability checking Yeti->Java is correct
                 //TODO: when testing retval assignability, also check num. of arguments too big/small
                 //FIXME: add some protection to be sure we won't get into infinite recursion
-                //FIXME: allow retval to also be any value normally convertible Yeti->Java
                 YType margs[] = sam.arguments;
                 YType yarg = from;
                 for (int i = 0; i < margs.length; ++i) {
