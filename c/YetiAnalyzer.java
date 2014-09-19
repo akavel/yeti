@@ -130,7 +130,7 @@ public final class YetiAnalyzer extends YetiType {
                 String name = x.expr[0].sym();
                 Code[] args = mapArgs(1, x.expr, scope, depth);
                 ClassBinding cb = resolveFullClass(name, scope, true, x);
-                //TODO: handle SUM here too, and test
+                //TODO: handle SAM here too, and test
                 return new NewExpr(
                     JavaType.resolveConstructor(x, cb.type, args, true)
                             .check(x, scope.ctx.packageName, 0),
