@@ -603,7 +603,7 @@ class JavaType implements Cloneable {
         //TODO: also we must have 0-argument constructor -- verify this
         Method sam = null;
         //FIXME: verify we're handling "final" classes correctly
-        for (int i=0; i<methods.length; i++) {
+        for (int i = 0; i < methods.length; ++i) {
             if (methods[i].isBuiltin() || ((methods[i].access & SAM_MASK) != SAM_BITS))
                 continue;
             if (sam != null)
@@ -688,7 +688,7 @@ class JavaType implements Cloneable {
                 //FIXME: allow retval to also be any value normally convertible Yeti->Java
                 YType margs[] = sam.arguments;
                 YType yarg = from;
-                for (int i=0; i<margs.length; i++) {
+                for (int i = 0; i < margs.length; ++i) {
                     if (yarg.type != YetiType.FUN)
                         return -1;
                     YType funarg[] = from.param;
