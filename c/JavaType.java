@@ -600,11 +600,17 @@ class JavaType implements Cloneable {
 
     // single abstract method, if available
     Method getSAM() {
-        //TODO: also we must have 0-argument constructor -- verify this
+        //TODO: test that we fail for 1 constructor with nonempty args
+        //TODO: test that we succeed for 1 constructor with empty args list
+		if (constructors.length > 1)
+			return null;
+		if (constructors.length == 1 && !"<init>()".equals(constructors[0]))
+			return null;
         Method sam = null;
         //FIXME: verify we're handling "final" classes correctly
         for (int i = 0; i < methods.length; ++i) {
-            if (methods[i].isBuiltin() || ((methods[i].access & SAM_MASK) != SAM_BITS))
+            if (methods[i].isBuiltin() ||
+                (methods[i].access & SAM_MASK) != SAM_BITS)
                 continue;
             if (sam != null)
                 return null; // must be exactly 1 such method to be SAM
