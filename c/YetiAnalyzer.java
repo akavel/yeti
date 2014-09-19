@@ -461,13 +461,11 @@ public final class YetiAnalyzer extends YetiType {
                         new YetiParser.Sym(sam.returnType.javaType.str().replace("~", "").replace(".", "/")),
                         new YetiParser.Sym(sam.name),
                         new YetiParser.XNode("argument-list", argnodes),
-                        call }),
-                });
+                        call }) });
                 YetiParser.Node cnew = new YetiParser.Seq(new YetiParser.Node[] {
                     c,
                     new YetiParser.XNode("new", new YetiParser.Node[] {
-                        new YetiParser.Sym("MCDBG$GENERATED$ID") }),
-                }, null);
+                        new YetiParser.Sym("MCDBG$GENERATED$ID") }) }, null);
 
                 //FIXME: what to use for 'depth' argument below, instead of 99?
                 args[i] = YetiAnalyzer.analyze(cnew, scope, 99);
