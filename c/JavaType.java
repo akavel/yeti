@@ -449,7 +449,7 @@ class JavaType implements Cloneable {
         if (from.type != YetiType.JAVA && to.type != YetiType.JAVA &&
                 to.type != YetiType.JAVA_ARRAY) {
             throw new CompileException(cast,
-                "Illegal cast from " + from + " to " + to +
+                "Illegal cast from " + from + " to " + to + 
                 " (neither side is java object)");
         }
         JavaType src = getClass(from);
@@ -1094,7 +1094,7 @@ class JavaType implements Cloneable {
     }
 
 /*    static YType toStructType(YType object) {
-        return null;
+        return null;   
     }*/
 
     private static List parentList(JavaType t) {

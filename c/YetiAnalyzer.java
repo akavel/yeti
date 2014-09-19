@@ -605,8 +605,6 @@ args[i] = YetiAnalyzer.analyze(cnew, scope, 99); //FIXME: is this ok?
                                            "Cannot use #1 as a function", ex);
             }
             YType argt = argCode.type.deref();
-            ex.printStackTrace();
-            new Exception().printStackTrace();
             String s = "Cannot apply #1 function";
             if (where != arg && where instanceof BinOp) {
                 BinOp op = (BinOp) where;
@@ -643,7 +641,7 @@ args[i] = YetiAnalyzer.analyze(cnew, scope, 99); //FIXME: is this ok?
                         "Unexpected " + op.op + " in field selector");
                 parts.addFirst(getSelectorSym(op, op.right).sym);
             }
-
+            
             parts.addFirst(getSelectorSym(section, x).sym);
             String[] fields =
                 (String[]) parts.toArray(new String[parts.size()]);
@@ -1222,7 +1220,7 @@ args[i] = YetiAnalyzer.analyze(cnew, scope, 99); //FIXME: is this ok?
         if (bind.type != null)
             isOp(bind, null, to, scope, depth);
         return lambda(to, (XNode) bind.expr, scope, depth);
-    }
+    } 
 
     static Code lambda(Function to, XNode lambda, Scope scope, int depth) {
         ++depth;
@@ -1635,7 +1633,7 @@ args[i] = YetiAnalyzer.analyze(cnew, scope, 99); //FIXME: is this ok?
                 if ((compiler.globalFlags & Compiler.GF_NO_IMPORT) != 0)
                     throw new CompileException(l, "load is disabled");
                 parser.loads = (XNode) l.expr[1];
-                ModuleType t =
+                ModuleType t = 
                    YetiTypeVisitor.getType(compiler, l, l.expr[0].sym(), false);
                 l.expr[1] = t;
                 if (depsModifiedTime < t.lastModified)
