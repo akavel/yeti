@@ -316,23 +316,22 @@ class JavaType implements Cloneable {
             return descr = result.toString();
         }
 
-        private static final Map BUILTINS = new HashMap();
-        static {
-            BUILTINS.put("int hashCode()", new Object());
-            BUILTINS.put("void notify()", new Object());
-            BUILTINS.put("void notifyAll()", new Object());
-            BUILTINS.put("~java.lang.Class getClass()", new Object());
-            BUILTINS.put("~java.lang.Object clone()", new Object());
-            BUILTINS.put("~java.lang.String toString()", new Object());
-            BUILTINS.put("void wait(long)", new Object());
-            BUILTINS.put("void wait(long, int)", new Object());
-            BUILTINS.put("boolean equals(~java.lang.Object)", new Object());
-            BUILTINS.put("void wait()", new Object());
-            BUILTINS.put("void finalize()", new Object());
-        }
+        private static final Set BUILTINS = new HashSet(Arrays.asList(new Object[] {
+            "int hashCode()",
+            "void notify()",
+            "void notifyAll()",
+            "~java.lang.Class getClass()",
+            "~java.lang.Object clone()",
+            "~java.lang.String toString()",
+            "void wait(long)",
+            "void wait(long, int)",
+            "boolean equals(~java.lang.Object)",
+            "void wait()",
+            "void finalize()",
+        }));
 
         boolean isBuiltin() {
-            return BUILTINS.containsKey(this.toString());
+            return BUILTINS.contains(this.toString());
         }
     }
 
