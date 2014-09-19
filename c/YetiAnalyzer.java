@@ -426,46 +426,43 @@ public final class YetiAnalyzer extends YetiType {
                 marg.type == YetiType.JAVA &&
                 marg.javaType.description != "Lyeti/lang/Fun;") {
                 JavaType.Method sam = marg.javaType.getSAM();
-                YetiParser.Node[] argnodes =
-                    new YetiParser.Node[sam.arguments.length*2];
+                Node[] argnodes = new Node[sam.arguments.length * 2];
                 for (int j = 0; j < sam.arguments.length; ++j) {
-                    argnodes[2*j] = new YetiParser.Sym(
+                    argnodes[2 * j] = new Sym(
                         sam.arguments[j].javaType.str().replace("~", "").replace(".", "/"));
-                    argnodes[2*j+1] = new YetiParser.Sym(("arg" + j).intern());
+                    argnodes[2 * j + 1] = new Sym(("arg" + j).intern());
                 }
-                YetiParser.Node call = new YetiParser.Seq(null, args[i]);
+                Node call = new Seq(null, args[i]);
                 for (int j = 0; j < sam.arguments.length; ++j) {
-                    YetiParser.BinOp op = new YetiParser.BinOp("", 2, true);
+                    BinOp op = new BinOp("", 2, true);
                     op.left = call;
-                    op.right = new YetiParser.Sym(("arg" + j).intern());
+                    op.right = new Sym(("arg" + j).intern());
                     //TODO: op.parent = ???
                     call = op;
                 }
                 if (sam.arguments.length == 0) {
                     //FIXME: verify if this is ok
-                    YetiParser.BinOp op = new YetiParser.BinOp("", 2, true);
+                    BinOp op = new BinOp("", 2, true);
                     op.left = call;
-                    op.right = new YetiParser.XNode("()");
+                    op.right = new XNode("()");
                     //TODO: op.parent = ???
                     call = op;
                 }
 
-                YetiParser.Node c = new YetiParser.XNode("class", new YetiParser.Node[] {
+                Node c = new XNode("class", new Node[] {
                     //TODO: use generated class name/ID, here and below in 'new'
-                    new YetiParser.Sym("MCDBG$GENERATED$ID"),
-                    new YetiParser.XNode("argument-list", new YetiParser.Node[0]),
-                    new YetiParser.XNode("extends", new YetiParser.Node[] {
-                        new YetiParser.Sym(marg.javaType.str().replace("~", "").replace(".", "/")),
-                        new YetiParser.XNode("arguments") }),
-                    new YetiParser.XNode("method", new YetiParser.Node[] {
-                        new YetiParser.Sym(sam.returnType.javaType.str().replace("~", "").replace(".", "/")),
-                        new YetiParser.Sym(sam.name),
-                        new YetiParser.XNode("argument-list", argnodes),
+                    new Sym("MCDBG$GENERATED$ID"),
+                    new XNode("argument-list", new Node[0]),
+                    new XNode("extends", new Node[] {
+                        new Sym(marg.javaType.str().replace("~", "").replace(".", "/")),
+                        new XNode("arguments") }),
+                    new XNode("method", new Node[] {
+                        new Sym(sam.returnType.javaType.str().replace("~", "").replace(".", "/")),
+                        new Sym(sam.name),
+                        new XNode("argument-list", argnodes),
                         call }) });
-                YetiParser.Node cnew = new YetiParser.Seq(new YetiParser.Node[] {
-                    c,
-                    new YetiParser.XNode("new", new YetiParser.Node[] {
-                        new YetiParser.Sym("MCDBG$GENERATED$ID") }) }, null);
+                Node cnew = new Seq(new Node[] {c, new XNode("new", new Node[] {
+                        new Sym("MCDBG$GENERATED$ID") }) }, null);
 
                 //FIXME: what to use for 'depth' argument below, instead of 99?
                 args[i] = YetiAnalyzer.analyze(cnew, scope, 99);
