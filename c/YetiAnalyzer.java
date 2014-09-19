@@ -429,11 +429,7 @@ public final class YetiAnalyzer extends YetiType {
                     argnodes[2*j] = new YetiParser.Sym(sam.arguments[j].javaType.str().replace("~", "").replace(".", "/"));
                     argnodes[2*j+1] = new YetiParser.Sym(("arg" + j).intern());
                 }
-                //TODO: first, we must try to do the same what happens when "class" token is found (create class?)
-                //TODO: the created class must inherit from specified interface/class m.arguments[i]
-                //TODO: in the created class, we must somehow inject the Code from args[i] in appropriate method
-                //TODO: in injected Code, we must somehow bind lambda arguments to method arguments / call the lambda w/them -- see '== ""', apply(), I believe
-                YetiParser.Node call = new YetiParser.Seq(new YetiParser.Node[] {new YetiParser.Seq(null, args[i])}, null);
+                YetiParser.Node call = new YetiParser.Seq(null, args[i]);
                 for (int j=0; j<sam.arguments.length; j++) {
                     YetiParser.BinOp op = new YetiParser.BinOp("", 2, true);
                     op.left = call;
