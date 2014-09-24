@@ -600,14 +600,16 @@ class JavaType implements Cloneable {
 
     // single abstract method, if available
     Method getSAM() {
-        //TODO: test that we fail for 1 constructor with nonempty args
-        //TODO: test that we succeed for 1 constructor with empty args list
+        //TODO: TEST that we fail for 1 constructor with nonempty args
+        //TODO: TEST that we succeed for 1 constructor with empty args list
         if (constructors.length > 1)
             return null;
         if (constructors.length == 1 && !"<init>()".equals(constructors[0]))
             return null;
+        //TODO: TEST that we refuse to generate SAM for class marked `final` [OTOH, abstract class probably can't be final...]
+        if ((access & Opcodes.ACC_FINAL) != 0)
+            return null;
         Method sam = null;
-        //FIXME: verify we're handling "final" classes correctly
         for (int i = 0; i < methods.length; ++i) {
             if (methods[i].isBuiltin() ||
                 (methods[i].access & SAM_MASK) != SAM_BITS)
@@ -693,6 +695,7 @@ class JavaType implements Cloneable {
                 //FIXME: add some protection to be sure we won't get into infinite recursion
                 YType margs[] = sam.arguments;
                 YType yarg = from;
+                //TODO: need special case for Yeti's 0-arg `foo _ = ...` function
                 for (int i = 0; i < margs.length; ++i) {
                     if (yarg.type != YetiType.FUN)
                         return -1;
