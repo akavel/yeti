@@ -617,7 +617,7 @@ class JavaType implements Cloneable {
             return null;
         Method sam = null;
         for (int i = 0; i < methods.length; ++i) {
-            System.out.println("MCDBG   method " + (i+1) + "/" + methods.length);
+            //System.out.println("MCDBG   method " + (i+1) + "/" + methods.length);
             if (methods[i].isBuiltin() ||
                 (methods[i].access & SAM_MASK) != SAM_BITS)
                 continue;

@@ -458,10 +458,12 @@ public final class YetiAnalyzer extends YetiType {
                     if (!c.type.javaType.description.equals(
                             marg.javaType.description))
                         continue;
+                    System.out.println("MCDBG FOUND BASE: " + s.name);
                     baseType = s.name;
                     break;
                 }
 
+System.out.println("MCDBG extends ytype=" + marg.toString());
                 Node c = new XNode("class", new Node[] {
                     //TODO: use generated class name/ID, here and below in 'new'
                     new Sym("MCDBG$GENERATED$ID"),
