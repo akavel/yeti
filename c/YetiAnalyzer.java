@@ -463,6 +463,7 @@ public final class YetiAnalyzer extends YetiType {
                         call }) });
                 Node cnew = new Seq(new Node[] {c, new XNode("new", new Node[] {
                         new Sym("MCDBG$GENERATED$ID") }) }, null);
+System.out.println("MCDBG " + cnew.str());
 
                 //FIXME: what to use for 'depth' argument below, instead of 99?
                 args[i] = YetiAnalyzer.analyze(cnew, scope, 99);
