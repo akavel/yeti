@@ -449,12 +449,25 @@ public final class YetiAnalyzer extends YetiType {
                     call = op;
                 }
 
+                // try to find Yeti name of base class, if possible
+                String baseType = marg.javaType.str().replace("~", "").replace(".", "/");
+                for (Scope s = scope; s != null; s = s.outer) {
+                    ClassBinding c = s.importClass;
+                    if (c == null || c.type.type != YetiType.JAVA)
+                        continue;
+                    if (!c.type.javaType.description.equals(
+                            marg.javaType.description))
+                        continue;
+                    baseType = s.name;
+                    break;
+                }
+
                 Node c = new XNode("class", new Node[] {
                     //TODO: use generated class name/ID, here and below in 'new'
                     new Sym("MCDBG$GENERATED$ID"),
                     new XNode("argument-list", new Node[0]),
                     new XNode("extends", new Node[] {
-                        new Sym(marg.javaType.str().replace("~", "").replace(".", "/")),
+                        new Sym(baseType),
                         new XNode("arguments") }),
                     new XNode("method", new Node[] {
                         new Sym(sam.returnType.javaType.str().replace("~", "").replace(".", "/")),
