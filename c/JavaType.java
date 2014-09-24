@@ -690,8 +690,8 @@ class JavaType implements Cloneable {
             resolve();
             Method sam = getSAM();
             if (sam != null) {
-                //TODO: add unit tests to verify that retval assignability checking Yeti->Java is correct
-                //TODO: when testing retval assignability, also check num. of arguments too big/small
+                //TODO: TEST add unit tests to verify that retval assignability checking Yeti->Java is correct
+                //TODO: TEST when testing retval assignability, also check num. of arguments too big/small
                 //FIXME: add some protection to be sure we won't get into infinite recursion
                 YType margs[] = sam.arguments;
                 YType yarg = from;
