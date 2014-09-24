@@ -465,8 +465,7 @@ public final class YetiAnalyzer extends YetiType {
 
 System.out.println("MCDBG extends ytype=" + marg.toString());
                 Node c = new XNode("class", new Node[] {
-                    //TODO: use generated class name/ID, here and below in 'new'
-                    new Sym("MCDBG$GENERATED$ID"),
+                    new Sym("__SAM"),
                     new XNode("argument-list", new Node[0]),
                     new XNode("extends", new Node[] {
                         new Sym(baseType),
@@ -477,7 +476,7 @@ System.out.println("MCDBG extends ytype=" + marg.toString());
                         new XNode("argument-list", argnodes),
                         call }) });
                 Node cnew = new Seq(new Node[] {c, new XNode("new", new Node[] {
-                        new Sym("MCDBG$GENERATED$ID") }) }, null);
+                        new Sym("__SAM") }) }, null);
 System.out.println("MCDBG " + cnew.str());
 
                 //FIXME: what to use for 'depth' argument below, instead of 99?
