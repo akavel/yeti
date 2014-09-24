@@ -600,11 +600,13 @@ class JavaType implements Cloneable {
 
     // single abstract method, if available
     Method getSAM() {
+        if (description.charAt(0) != 'L')
+            return null;
         //TODO: TEST that we fail for 1 constructor with nonempty args
         //TODO: TEST that we succeed for 1 constructor with empty args list
         if (constructors.length > 1)
             return null;
-        if (constructors.length == 1 && !"<init>()".equals(constructors[0]))
+        if (constructors.length == 1 && !"void <init>()".equals(constructors[0].toString()))
             return null;
         //TODO: TEST that we refuse to generate SAM for class marked `final` [OTOH, abstract class probably can't be final...]
         if ((access & Opcodes.ACC_FINAL) != 0)
