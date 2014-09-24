@@ -602,7 +602,7 @@ class JavaType implements Cloneable {
     Method getSAM() {
         System.out.println("MCDBG getSAM...");
         System.out.println("MCDBG  description=" + description);
-        if (description.charAt(0) != 'L')
+        if (!description.startsWith("L"))
             return null;
         System.out.println("MCDBG  testing constructors..." + java.util.Arrays.toString(constructors));
         //TODO: TEST that we fail for 1 constructor with nonempty args
