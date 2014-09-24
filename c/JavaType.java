@@ -708,6 +708,9 @@ class JavaType implements Cloneable {
                 YType yarg = from;
                 //TODO: need special case for Yeti's 0-arg `foo _ = ...` function
                 for (int i = 0; i < margs.length; ++i) {
+                    System.out.println("MCDBG  marg " + (i+1) + "/" + margs.length);
+                    System.out.println("MCDBG   margs[i]=" + margs[i]);
+                    System.out.println("MCDBG   yarg=" + yarg + " t=" + yarg.type + " param=" + java.util.Arrays.toString(yarg.param));
                     if (yarg.type != YetiType.FUN) {
                         System.out.println("MCDBG non-FUN yarg " + yarg);
                         return -1;
@@ -725,16 +728,18 @@ class JavaType implements Cloneable {
                     yarg = funarg[1];
                 }
                 if (isAssignable(sam.returnType, yarg, true) >= 0) {//FIXME: true here, or false?
-                    System.out.println("MCDBG Yeti lambda seems assignable to Java SUM");
+                    System.out.println("MCDBG Yeti lambda seems assignable to Java SAM");
                     return 9; //FIXME: what value here? would be nice to add args assignability
                 }
-                System.out.println("MCDBG cannot assign Yeti lambda as Java SUM");
+                System.out.println("MCDBG " + sam.returnType.type + "/" + sam.returnType.javaType.description + "/" + yarg.type + " " + java.util.Arrays.toString(yarg.param));
                 boolean yargUnit = (yarg.type == YetiType.UNIT || (yarg.type == YetiType.VAR && yarg.param == null)); // FIXME: ok??
                 if (sam.returnType.type == YetiType.JAVA &&
                     sam.returnType.javaType.description.equals("V") &&
                     yargUnit) {
                     return 9; //FIXME: what value here? would be nice to add args assignability
                 }
+                System.out.println("MCDBG cannot assign Yeti lambda as Java SAM");
+                System.out.println("MCDBG with returnType=" + sam.returnType + " and yarg=" + yarg);
             }
             return -1;
         case YetiType.MAP: {
