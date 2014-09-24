@@ -707,6 +707,18 @@ class JavaType implements Cloneable {
                 YType margs[] = sam.arguments;
                 YType yarg = from;
                 //TODO: need special case for Yeti's 0-arg `foo _ = ...` function
+                if (margs.length == 0) {
+                    if (yarg.type != YetiType.FUN)
+                        return -1;
+                    YType funarg[] = yarg.param;
+                    if (funarg == null || funarg == YetiType.NO_PARAM ||
+                        funarg.length != 2)
+                        return -1;
+                    boolean yargUnit = (funarg[0].type == YetiType.UNIT || (funarg[0].type == YetiType.VAR && funarg[0].param == null)); // FIXME: ok??
+                    if (!yargUnit)
+                        return -1;
+                    yarg = funarg[1];
+                }
                 for (int i = 0; i < margs.length; ++i) {
                     System.out.println("MCDBG  marg " + (i+1) + "/" + margs.length);
                     System.out.println("MCDBG   margs[i]=" + margs[i]);
