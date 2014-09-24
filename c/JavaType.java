@@ -712,7 +712,7 @@ class JavaType implements Cloneable {
                         System.out.println("MCDBG non-FUN yarg " + yarg);
                         return -1;
                     }
-                    YType funarg[] = from.param;
+                    YType funarg[] = yarg.param;
                     if (funarg == null || funarg == YetiType.NO_PARAM ||
                         funarg.length != 2) {
                         System.out.println("MCDBG bad funarg " + funarg + " at i=" + i);
@@ -724,11 +724,17 @@ class JavaType implements Cloneable {
                     }
                     yarg = funarg[1];
                 }
-                if (isAssignable(sam.returnType, yarg, true) < 0) {//FIXME: true here, or false?
+                if (isAssignable(sam.returnType, yarg, true) >= 0) {//FIXME: true here, or false?
                     System.out.println("MCDBG Yeti lambda seems assignable to Java SUM");
                     return 9; //FIXME: what value here? would be nice to add args assignability
                 }
                 System.out.println("MCDBG cannot assign Yeti lambda as Java SUM");
+                boolean yargUnit = (yarg.type == YetiType.UNIT || (yarg.type == YetiType.VAR && yarg.param == null)); // FIXME: ok??
+                if (sam.returnType.type == YetiType.JAVA &&
+                    sam.returnType.javaType.description.equals("V") &&
+                    yargUnit) {
+                    return 9; //FIXME: what value here? would be nice to add args assignability
+                }
             }
             return -1;
         case YetiType.MAP: {
