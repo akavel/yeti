@@ -719,8 +719,7 @@ class JavaType implements Cloneable {
                         System.out.println("MCDBG bad funarg " + funarg + " at 0-arg");
                         return -1;
                     }
-                    boolean yargUnit = (funarg[0].type == YetiType.UNIT || (funarg[0].type == YetiType.VAR && funarg[0].param == null)); // FIXME: ok??
-                    if (!yargUnit) {
+                    if (funarg[0].deref().type != YetiType.UNIT) {
                         System.out.println("MCDBG not () 0-arg");
                         return -1;
                     }
@@ -751,10 +750,9 @@ class JavaType implements Cloneable {
                     return 9; //FIXME: what value here? would be nice to add args assignability
                 }
                 System.out.println("MCDBG " + sam.returnType.type + "/" + sam.returnType.javaType.description + "/" + yarg.type + " " + java.util.Arrays.toString(yarg.param));
-                boolean yargUnit = (yarg.type == YetiType.UNIT || (yarg.type == YetiType.VAR && yarg.param == null)); // FIXME: ok??
                 if (sam.returnType.type == YetiType.JAVA &&
                     sam.returnType.javaType.description.equals("V") &&
-                    yargUnit) {
+                    yarg.deref().type == YetiType.UNIT) {
                     return 9; //FIXME: what value here? would be nice to add args assignability
                 }
                 System.out.println("MCDBG cannot assign Yeti lambda as Java SAM");
