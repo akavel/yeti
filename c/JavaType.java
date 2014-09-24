@@ -708,15 +708,22 @@ class JavaType implements Cloneable {
                 YType yarg = from;
                 //TODO: need special case for Yeti's 0-arg `foo _ = ...` function
                 if (margs.length == 0) {
-                    if (yarg.type != YetiType.FUN)
+                    System.out.println("MCDBG  special-case 0-arg");
+                    if (yarg.type != YetiType.FUN) {
+                        System.out.println("MCDBG non-FUN 0-yarg " + yarg);
                         return -1;
+                    }
                     YType funarg[] = yarg.param;
                     if (funarg == null || funarg == YetiType.NO_PARAM ||
-                        funarg.length != 2)
+                        funarg.length != 2) {
+                        System.out.println("MCDBG bad funarg " + funarg + " at 0-arg");
                         return -1;
+                    }
                     boolean yargUnit = (funarg[0].type == YetiType.UNIT || (funarg[0].type == YetiType.VAR && funarg[0].param == null)); // FIXME: ok??
-                    if (!yargUnit)
+                    if (!yargUnit) {
+                        System.out.println("MCDBG not () 0-arg");
                         return -1;
+                    }
                     yarg = funarg[1];
                 }
                 for (int i = 0; i < margs.length; ++i) {
