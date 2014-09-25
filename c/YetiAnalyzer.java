@@ -433,6 +433,14 @@ public final class YetiAnalyzer extends YetiType {
         return new Sym(yname);
     }
 
+    private static Node newBinOp(Node left, Node right) {
+        BinOp op = new BinOp("", 2, true);
+        op.left = call;
+        op.right = new Sym(name);
+        //TODO: op.parent = ???
+        return op;
+    }
+
     static Code wrapSam(YType to, Code from, Scope scope) {
         if (from.type.type != YetiType.FUN ||
             to.type != YetiType.JAVA ||
@@ -446,21 +454,10 @@ public final class YetiAnalyzer extends YetiType {
             String name = ("arg" + j).intern();
             argnodes[2 * j] = toSym(sam.arguments[j].javaType, scope);
             argnodes[2 * j + 1] = new Sym(name);
-
-            BinOp op = new BinOp("", 2, true);
-            op.left = call;
-            op.right = new Sym(name);
-            //TODO: op.parent = ???
-            call = op;
+            call = newBinOp(call, new Sym(name));
         }
-        if (sam.arguments.length == 0) {
-            //FIXME: verify if this is ok
-            BinOp op = new BinOp("", 2, true);
-            op.left = call;
-            op.right = new XNode("()");
-            //TODO: op.parent = ???
-            call = op;
-        }
+        if (sam.arguments.length == 0)
+            call = newBinOp(call, new XNode("()")); //FIXME: verify if this is ok
 
         Node c = new XNode("class", new Node[] {
             new Sym("__SAM"),
