@@ -458,12 +458,10 @@ public final class YetiAnalyzer extends YetiType {
                     if (!c.type.javaType.description.equals(
                             marg.javaType.description))
                         continue;
-                    System.out.println("MCDBG FOUND BASE: " + s.name);
                     baseType = s.name;
                     break;
                 }
 
-System.out.println("MCDBG extends ytype=" + marg.toString());
                 Node c = new XNode("class", new Node[] {
                     new Sym("__SAM"),
                     new XNode("argument-list", new Node[0]),
@@ -477,7 +475,6 @@ System.out.println("MCDBG extends ytype=" + marg.toString());
                         call }) });
                 Node cnew = new Seq(new Node[] {c, new XNode("new", new Node[] {
                         new Sym("__SAM") }) }, null);
-System.out.println("MCDBG " + cnew.str());
 
                 //FIXME: what to use for 'depth' argument below, instead of 99?
                 args[i] = YetiAnalyzer.analyze(cnew, scope, 99);

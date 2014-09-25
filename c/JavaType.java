@@ -600,33 +600,26 @@ class JavaType implements Cloneable {
 
     // single abstract method, if available
     Method getSAM() {
-        System.out.println("MCDBG getSAM...");
-        System.out.println("MCDBG  description=" + description);
         if (!description.startsWith("L"))
             return null;
-        System.out.println("MCDBG  testing constructors..." + java.util.Arrays.toString(constructors));
         //TODO: TEST that we fail for 1 constructor with nonempty args
         //TODO: TEST that we succeed for 1 constructor with empty args list
         if (constructors.length > 1)
             return null;
         if (constructors.length == 1 && !"void <init>()".equals(constructors[0].toString()))
             return null;
-        System.out.println("MCDBG  testing final class...");
         //TODO: TEST that we refuse to generate SAM for class marked `final` [OTOH, abstract class probably can't be final...]
         if ((access & Opcodes.ACC_FINAL) != 0)
             return null;
         Method sam = null;
         for (int i = 0; i < methods.length; ++i) {
-            //System.out.println("MCDBG   method " + (i+1) + "/" + methods.length);
             if (methods[i].isBuiltin() ||
                 (methods[i].access & SAM_MASK) != SAM_BITS)
                 continue;
-            System.out.println("MCDBG   sam=" + sam);
             if (sam != null)
                 return null; // must be exactly 1 such method to be SAM
             sam = methods[i];
         }
-        System.out.println("MCDBG  final sam=" + sam);
         return sam;
     }
 
@@ -696,11 +689,9 @@ class JavaType implements Cloneable {
         case YetiType.FUN:
             if (description == "Lyeti/lang/Fun;")
                 return 0;
-            System.out.println("MCDBG " + description + " FROM " + from);
             resolve();
             Method sam = getSAM();
             if (sam != null) {
-                System.out.println("MCDBG one public abstract...");
                 //TODO: TEST add unit tests to verify that retval assignability checking Yeti->Java is correct
                 //TODO: TEST when testing retval assignability, also check num. of arguments too big/small
                 //FIXME: add some protection to be sure we won't get into infinite recursion
@@ -708,55 +699,34 @@ class JavaType implements Cloneable {
                 YType yarg = from;
                 //TODO: need special case for Yeti's 0-arg `foo _ = ...` function
                 if (margs.length == 0) {
-                    System.out.println("MCDBG  special-case 0-arg");
-                    if (yarg.type != YetiType.FUN) {
-                        System.out.println("MCDBG non-FUN 0-yarg " + yarg);
+                    if (yarg.type != YetiType.FUN)
                         return -1;
-                    }
                     YType funarg[] = yarg.param;
                     if (funarg == null || funarg == YetiType.NO_PARAM ||
-                        funarg.length != 2) {
-                        System.out.println("MCDBG bad funarg " + funarg + " at 0-arg");
+                        funarg.length != 2)
                         return -1;
-                    }
-                    if (funarg[0].deref().type != YetiType.UNIT) {
-                        System.out.println("MCDBG not () 0-arg");
+                    if (funarg[0].deref().type != YetiType.UNIT)
                         return -1;
-                    }
                     yarg = funarg[1];
                 }
                 for (int i = 0; i < margs.length; ++i) {
-                    System.out.println("MCDBG  marg " + (i+1) + "/" + margs.length);
-                    System.out.println("MCDBG   margs[i]=" + margs[i]);
-                    System.out.println("MCDBG   yarg=" + yarg + " t=" + yarg.type + " param=" + java.util.Arrays.toString(yarg.param));
-                    if (yarg.type != YetiType.FUN) {
-                        System.out.println("MCDBG non-FUN yarg " + yarg);
+                    if (yarg.type != YetiType.FUN)
                         return -1;
-                    }
                     YType funarg[] = yarg.param;
                     if (funarg == null || funarg == YetiType.NO_PARAM ||
-                        funarg.length != 2) {
-                        System.out.println("MCDBG bad funarg " + funarg + " at i=" + i);
+                        funarg.length != 2)
                         return -1;
-                    }
-                    if (isAssignable(funarg[0], margs[i], true) < 0) {//FIXME: true here, or false?
-                        System.out.println("MCDBG not assignable " + funarg[0] + " := " + margs[i]);
+                    if (isAssignable(funarg[0], margs[i], true) < 0) //FIXME: true here, or false?
                         return -1;
-                    }
                     yarg = funarg[1];
                 }
-                if (isAssignable(sam.returnType, yarg, true) >= 0) {//FIXME: true here, or false?
-                    System.out.println("MCDBG Yeti lambda seems assignable to Java SAM");
+                if (isAssignable(sam.returnType, yarg, true) >= 0) //FIXME: true here, or false?
                     return 9; //FIXME: what value here? would be nice to add args assignability
-                }
-                System.out.println("MCDBG " + sam.returnType.type + "/" + sam.returnType.javaType.description + "/" + yarg.type + " " + java.util.Arrays.toString(yarg.param));
                 if (sam.returnType.type == YetiType.JAVA &&
                     sam.returnType.javaType.description.equals("V") &&
                     yarg.deref().type == YetiType.UNIT) {
                     return 9; //FIXME: what value here? would be nice to add args assignability
                 }
-                System.out.println("MCDBG cannot assign Yeti lambda as Java SAM");
-                System.out.println("MCDBG with returnType=" + sam.returnType + " and yarg=" + yarg);
             }
             return -1;
         case YetiType.MAP: {
