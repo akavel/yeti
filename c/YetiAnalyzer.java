@@ -435,8 +435,8 @@ public final class YetiAnalyzer extends YetiType {
 
     private static Node newBinOp(Node left, Node right) {
         BinOp op = new BinOp("", 2, true);
-        op.left = call;
-        op.right = new Sym(name);
+        op.left = left;
+        op.right = right;
         //TODO: op.parent = ???
         return op;
     }
