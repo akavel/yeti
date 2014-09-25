@@ -418,68 +418,72 @@ public final class YetiAnalyzer extends YetiType {
         return res;
     }
 
+    private static Sym toSym(JavaType t, Scope scope) {
+        // try to find Yeti name of base class, if possible
+        String yname = t.str().replace("~", "").replace(".", "/");
+        for (Scope s = scope; s != null; s = s.outer) {
+            ClassBinding c = s.importClass;
+            if (c == null || c.type.type != YetiType.JAVA)
+                continue;
+            if (!c.type.javaType.description.equals(t.description))
+                continue;
+            yname = s.name;
+            break;
+        }
+        return new Sym(yname);
+    }
+
+    static Code wrapSam(YType to, Code from, Scope scope) {
+        if (from.type.type != YetiType.FUN ||
+            to.type != YetiType.JAVA ||
+            to.javaType.description == "Lyeti/lang/Fun;")
+            return from;
+
+        JavaType.Method sam = to.javaType.getSAM();
+        Node[] argnodes = new Node[sam.arguments.length * 2];
+        for (int j = 0; j < sam.arguments.length; ++j) {
+            argnodes[2 * j] = toSym(sam.arguments[j].javaType, scope);
+            argnodes[2 * j + 1] = new Sym(("arg" + j).intern());
+        }
+        Node call = new Seq(null, from);
+        for (int j = 0; j < sam.arguments.length; ++j) {
+            BinOp op = new BinOp("", 2, true);
+            op.left = call;
+            op.right = new Sym(("arg" + j).intern());
+            //TODO: op.parent = ???
+            call = op;
+        }
+        if (sam.arguments.length == 0) {
+            //FIXME: verify if this is ok
+            BinOp op = new BinOp("", 2, true);
+            op.left = call;
+            op.right = new XNode("()");
+            //TODO: op.parent = ???
+            call = op;
+        }
+
+        Node c = new XNode("class", new Node[] {
+            new Sym("__SAM"),
+            new XNode("argument-list", new Node[0]),
+            new XNode("extends", new Node[] {
+                toSym(to.javaType, scope),
+                new XNode("arguments") }),
+            new XNode("method", new Node[] {
+                toSym(sam.returnType.javaType, scope),
+                new Sym(sam.name),
+                new XNode("argument-list", argnodes),
+                call }) });
+        Node cnew = new Seq(new Node[] {c, new XNode("new", new Node[] {
+                new Sym("__SAM") }) }, null);
+
+        //FIXME: what to use for 'depth' argument below, instead of 99?
+        return YetiAnalyzer.analyze(cnew, scope, 99);
+    }
+
     static JavaType.Method wrapSamArgs(JavaType.Method m, Code[] args, Scope scope) {
         //TODO: maybe some day this could actually be done on every assignment etc, not only for method calls
-        for (int i = 0; i < args.length; ++i) {
-            YType marg = m.arguments[i];
-            if (args[i].type.type == YetiType.FUN &&
-                marg.type == YetiType.JAVA &&
-                marg.javaType.description != "Lyeti/lang/Fun;") {
-                JavaType.Method sam = marg.javaType.getSAM();
-                Node[] argnodes = new Node[sam.arguments.length * 2];
-                for (int j = 0; j < sam.arguments.length; ++j) {
-                    argnodes[2 * j] = new Sym(
-                        sam.arguments[j].javaType.str().replace("~", "").replace(".", "/"));
-                    argnodes[2 * j + 1] = new Sym(("arg" + j).intern());
-                }
-                Node call = new Seq(null, args[i]);
-                for (int j = 0; j < sam.arguments.length; ++j) {
-                    BinOp op = new BinOp("", 2, true);
-                    op.left = call;
-                    op.right = new Sym(("arg" + j).intern());
-                    //TODO: op.parent = ???
-                    call = op;
-                }
-                if (sam.arguments.length == 0) {
-                    //FIXME: verify if this is ok
-                    BinOp op = new BinOp("", 2, true);
-                    op.left = call;
-                    op.right = new XNode("()");
-                    //TODO: op.parent = ???
-                    call = op;
-                }
-
-                // try to find Yeti name of base class, if possible
-                String baseType = marg.javaType.str().replace("~", "").replace(".", "/");
-                for (Scope s = scope; s != null; s = s.outer) {
-                    ClassBinding c = s.importClass;
-                    if (c == null || c.type.type != YetiType.JAVA)
-                        continue;
-                    if (!c.type.javaType.description.equals(
-                            marg.javaType.description))
-                        continue;
-                    baseType = s.name;
-                    break;
-                }
-
-                Node c = new XNode("class", new Node[] {
-                    new Sym("__SAM"),
-                    new XNode("argument-list", new Node[0]),
-                    new XNode("extends", new Node[] {
-                        new Sym(baseType),
-                        new XNode("arguments") }),
-                    new XNode("method", new Node[] {
-                        new Sym(sam.returnType.javaType.str().replace("~", "").replace(".", "/")),
-                        new Sym(sam.name),
-                        new XNode("argument-list", argnodes),
-                        call }) });
-                Node cnew = new Seq(new Node[] {c, new XNode("new", new Node[] {
-                        new Sym("__SAM") }) }, null);
-
-                //FIXME: what to use for 'depth' argument below, instead of 99?
-                args[i] = YetiAnalyzer.analyze(cnew, scope, 99);
-            }
-        }
+        for (int i = 0; i < args.length; ++i)
+            args[i] = wrapSam(m.arguments[i], args[i], scope);
         return m;
     }
 
