@@ -438,18 +438,18 @@ public final class YetiAnalyzer extends YetiType {
             to.type != YetiType.JAVA ||
             to.javaType.description == "Lyeti/lang/Fun;")
             return from;
-
         JavaType.Method sam = to.javaType.getSAM();
+
         Node[] argnodes = new Node[sam.arguments.length * 2];
-        for (int j = 0; j < sam.arguments.length; ++j) {
-            argnodes[2 * j] = toSym(sam.arguments[j].javaType, scope);
-            argnodes[2 * j + 1] = new Sym(("arg" + j).intern());
-        }
         Node call = new Seq(null, from);
         for (int j = 0; j < sam.arguments.length; ++j) {
+            String name = ("arg" + j).intern();
+            argnodes[2 * j] = toSym(sam.arguments[j].javaType, scope);
+            argnodes[2 * j + 1] = new Sym(name);
+
             BinOp op = new BinOp("", 2, true);
             op.left = call;
-            op.right = new Sym(("arg" + j).intern());
+            op.right = new Sym(name);
             //TODO: op.parent = ???
             call = op;
         }
