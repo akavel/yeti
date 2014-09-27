@@ -441,7 +441,7 @@ public final class YetiAnalyzer extends YetiType {
         return op;
     }
 
-    static Code wrapSam(YType to, Code from, Scope scope) {
+    static Code wrapInSAM(YType to, Code from, Scope scope) {
         if (from.type.type != YetiType.FUN ||
             to.type != YetiType.JAVA ||
             to.javaType.description == "Lyeti/lang/Fun;")
@@ -477,11 +477,11 @@ public final class YetiAnalyzer extends YetiType {
         return YetiAnalyzer.analyze(cnew, scope, 99);
     }
 
-    static JavaType.Method wrapSamArgs(JavaType.Method m, Code[] args, Scope scope) {
+    private static Code[] wrapInSAM(YType[] to, Code[] from, Scope scope) {
         //TODO: maybe some day this could actually be done on every assignment etc, not only for method calls
-        for (int i = 0; i < args.length; ++i)
-            args[i] = wrapSam(m.arguments[i], args[i], scope);
-        return m;
+        for (int i = 0; i < from.length; ++i)
+            from[i] = wrapInSAM(to[i], from[i], scope);
+        return from;
     }
 
     static Code objectRef(ObjectRefOp ref, Scope scope, int depth) {
@@ -517,7 +517,8 @@ public final class YetiAnalyzer extends YetiType {
         //TODO: TEST add Yeti tests for wrapSamArgs
         JavaType.Method m = JavaType.resolveMethod(ref, t, args, obj == null)
                                     .check(ref, scope.ctx.packageName, 0);
-        return new MethodCall(obj, wrapSamArgs(m, args, scope), args, ref.line);
+        return new MethodCall(obj, m, wrapInSAM(m.arguments, args, scope),
+            ref.line);
     }
 
     static Code newArray(XNode op, Scope scope, int depth) {
